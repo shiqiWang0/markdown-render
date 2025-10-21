@@ -30,3 +30,14 @@
 | **unist-util-visit** | 遍历 Markdown 抽象语法树（AST）提取节点 |
 | **Ant Design**       | UI 组件库，负责表格渲染                 |
 | **TypeScript**       | 类型安全与开发体验优化                  |
+
+## run dev
+
+node 20
+
+```
+pnpm install
+pnpm run dev
+```
+
+Local: http://localhost:5173/
