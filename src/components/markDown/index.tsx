@@ -8,25 +8,47 @@ import remarkGfm from "remark-gfm";
 import Markdown from "react-markdown";
 import React from "react";
 
+interface ITocData {
+  depth: number;
+  value: string;
+  id: string;
+}
+
+type IAnchor = Omit<ITocData, "id" | "value"> & {
+  title: string;
+  key: string;
+  href: string;
+  children: IAnchor[];
+};
+
+interface INode {
+  tagName?: string;
+  type?: string;
+  value?: string;
+  children?: INode[];
+}
+
 const getCleanedId = (title: string) => {
   return title.trim();
 };
 
-function useMarkdownParser(markdown) {
+function useMarkdownParser(markdown: string) {
   const [htmlContent, setHtmlContent] = useState("");
-  const [toc, setToc] = useState([]);
+  const [toc, setToc] = useState<ITocData[]>([]);
 
   useEffect(() => {
     if (!markdown) return;
 
     async function parse() {
       const ast = remark().parse(markdown);
-      const tocData = [];
+      const tocData: { depth: number; value: string; id: string }[] = [];
 
       // 1️⃣ 提取标题
       visit(ast, "heading", (node) => {
         if (node.depth >= 1 && node.depth <= 5) {
-          const text = node.children.map((n) => n.value || "").join("");
+          const text = node.children
+            .map((n) => ("value" in n ? n.value : ""))
+            .join("");
           const id = getCleanedId(text);
           tocData.push({ depth: node.depth, value: text, id });
         }
@@ -49,16 +71,16 @@ function useMarkdownParser(markdown) {
   return { htmlContent, toc };
 }
 
-export default function MarkdownViewer({ markdown }) {
+export default function MarkdownViewer({ markdown }: { markdown: string }) {
   const { toc } = useMarkdownParser(markdown);
   const contentRef = useRef(null);
 
-  function buildNestedTree(list) {
-    const root = [];
-    const stack = [];
+  function buildNestedTree(list: ITocData[]): IAnchor[] {
+    const root: IAnchor[] = [];
+    const stack: IAnchor[] = [];
 
     for (const item of list) {
-      const node = {
+      const node: IAnchor = {
         key: getCleanedId(item.id),
         title: item.value,
         depth: item.depth,
@@ -73,9 +95,9 @@ export default function MarkdownViewer({ markdown }) {
         for (let d = prev.depth + 1; d < item.depth; d++) {
           const placeholder = {
             depth: d,
-            value: "",
+            title: "",
             href: `#auto-${d}-${Math.random().toString(36).slice(2, 6)}`,
-            id: `auto-${d}-${Math.random().toString(36).slice(2, 6)}`,
+            key: `auto-${d}-${Math.random().toString(36).slice(2, 6)}`,
             children: [],
           };
           prev.children.push(placeholder);
@@ -98,7 +120,13 @@ export default function MarkdownViewer({ markdown }) {
     return root;
   }
 
-  const handleClick = (e, link) => {
+  const handleClick = (
+    e: React.MouseEvent<HTMLElement, MouseEvent>,
+    link: {
+      title: React.ReactNode;
+      href: string;
+    }
+  ) => {
     e.preventDefault();
     const id = link.href;
     const node = document.getElementById(id);
@@ -132,18 +160,19 @@ export default function MarkdownViewer({ markdown }) {
    * 将 table AST 节点转换为 antd Table 数据结构
    * @param {object} tableNode - HAST 中的 table 节点
    */
-  function parseTableToAntd(tableNode) {
-    if (!tableNode || tableNode.tagName !== "table") return null;
+  function parseTableToAntd(tableNode: INode | undefined) {
+    if (!tableNode || tableNode.tagName !== "table")
+      return { columns: [], dataSource: [] };
 
-    const thead = tableNode.children.find((c) => c.tagName === "thead");
-    const tbody = tableNode.children.find((c) => c.tagName === "tbody");
-    const trInTHead = thead.children.filter((tr) => tr.tagName === "tr");
-    const trInTbody = tbody.children.filter((tr) => tr.tagName === "tr");
+    const thead = tableNode.children?.find((c) => c.tagName === "thead");
+    const tbody = tableNode.children?.find((c) => c.tagName === "tbody");
+    const trInTHead = thead?.children?.filter((tr) => tr.tagName === "tr");
+    const trInTbody = tbody?.children?.filter((tr) => tr.tagName === "tr");
 
-    const thInTr = trInTHead[0].children.filter((th) => th.tagName === "th");
+    const thInTr = trInTHead?.[0].children?.filter((th) => th.tagName === "th");
 
     // 1️⃣ 获取列名
-    const columns = thInTr.map((th, i) => {
+    const columns = thInTr?.map((th, i) => {
       const title = getTextContent(th);
       return {
         title,
@@ -151,13 +180,13 @@ export default function MarkdownViewer({ markdown }) {
         key: `col${i}`,
       };
     });
-
+    if (!trInTbody?.length) return { columns: [], dataSource: [] };
     // 2️⃣ 获取数据行
     const dataSource =
       trInTbody?.map((tr, rowIndex) => {
-        const row = {};
+        const row: Record<string, string | number | undefined> = {};
         tr.children
-          .filter((td) => td.tagName === "td")
+          ?.filter((td) => td.tagName === "td")
           .forEach((td, colIndex) => {
             row[`col${colIndex}`] = getTextContent(td);
           });
@@ -169,7 +198,7 @@ export default function MarkdownViewer({ markdown }) {
   }
 
   /** 获取文本内容（去除多层 children） */
-  function getTextContent(node) {
+  function getTextContent(node: INode): string | undefined {
     if (!node) return "";
     if (node.type === "text") return node.value;
     if (node.children) return node.children.map(getTextContent).join("");
