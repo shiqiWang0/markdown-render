@@ -1,75 +1,32 @@
-# React + TypeScript + Vite
+# 📘 Markdown Renderer with TOC & Antd Table
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+本项目支持从后端动态获取 Markdown 内容，在前端进行解析、渲染，并自动生成大纲（TOC）与表格组件。  
+基于 React + Remark + Ant Design 实现，适用于文档展示。
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## React Compiler
+- 🚀 **Dynamic Markdown Rendering**  
+  从后端接口获取文档内容，前端解析为 React 组件。
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- 🧭 **Auto TOC (Table of Contents)**  
+  自动提取 Markdown 中的 H1 ～ H5 标题，生成可点击的目录结构并支持滚动定位。
 
-Note: This will impact Vite dev & build performances.
+- 🧩 **Ant Design Table Rendering**  
+  将 Markdown 中的 `<table>` 节点自动转化为 Ant Design `<Table />` 组件，支持列定义与数据源映射。
 
-## Expanding the ESLint configuration
+- 🔤 **Emoji & Special Char Safe ID Generation**  
+  支持中文、数字、emoji 等混合标题，生成稳定的锚点 ID。
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🏗️ Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| 名称                 | 用途                                    |
+| -------------------- | --------------------------------------- |
+| **React**            | 前端渲染框架                            |
+| **remark / rehype**  | Markdown → AST → HTML 解析              |
+| **unist-util-visit** | 遍历 Markdown 抽象语法树（AST）提取节点 |
+| **Ant Design**       | UI 组件库，负责表格渲染                 |
+| **TypeScript**       | 类型安全与开发体验优化                  |
